@@ -6860,6 +6860,9 @@ button.close {
 .rs-courses .cource-item .cource-img img {
   width: 100%;
   transition: all 0.3s ease 0s;
+  max-height: 350px!important;
+  height: auto; /* for IE 8 */
+  overflow: hidden;
 }
 .rs-courses .cource-item .cource-img .course-value {
   position: absolute;
