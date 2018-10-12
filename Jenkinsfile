@@ -17,6 +17,11 @@ stage('build') {
     }
 }
 
+stage('Results and Archive') {
+      junit '**/target/surefire-reports/TEST-*.xml'
+      archive 'target/*.war'
+ }
+
 def branch_type = get_branch_type "${env.BRANCH_NAME}"
 def branch_deployment_environment = get_branch_deployment_environment branch_type
 
@@ -85,7 +90,7 @@ if (branch_type == "hotfix") {
 // Utility functions
 def get_branch_type(String branch_name) {
     //Must be specified according to <flowInitContext> configuration of jgitflow-maven-plugin in pom.xml
-    def dev_pattern = ".*development"
+    def dev_pattern = ".*dev"
     def release_pattern = ".*release/.*"
     def feature_pattern = ".*feature/.*"
     def hotfix_pattern = ".*hotfix/.*"
@@ -120,9 +125,11 @@ def get_branch_deployment_environment(String branch_type) {
 def mvn(String goals) {
     def mvnHome = tool "mvn"
 
-    withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-        sh "mvn -B ${goals}"
-    }
+    if (isUnix()) {
+         sh "'${mvnHome}/bin/mvn' -B ${goals}"
+	  } else {
+	     bat(/"${mvnHome}\bin\mvn" -B ${goals}/)
+	  }
 }
 
 def version() {
