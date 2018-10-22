@@ -40,15 +40,6 @@ if (branch_deployment_environment) {
             //TODO specify the deployment
         }
     }
-
-    if (branch_deployment_environment != "prod") {
-        stage('integration tests') {
-            node {
-                echo "Running integration tests in ${branch_deployment_environment}"
-                //TODO do the actual tests
-            }
-        }
-    }
 }
 
 // Utility functions
