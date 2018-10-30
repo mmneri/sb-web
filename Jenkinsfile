@@ -1,19 +1,22 @@
 #!groovy​
 
 properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
+def utilities
 
 stage('Checkout and Unit Test') {
     node {
+    	git 'https://github.com/mmneri/sb-deploy.git'
+      	utilities = load 'utilities.groovy'
         checkout scm
         def v = version()
         currentBuild.displayName = "${env.BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"
-        mvn "clean verify"
+        utilities.mvn "clean verify"
     }
 }
 
 stage('build') {
     node {
-        mvn "clean package -DskipTests"
+        utilities.mvn "clean package -DskipTests"
     }
 }
 
@@ -25,8 +28,8 @@ stage('Create build output'){
     }
 }
 
-def branch_type = get_branch_type "${env.BRANCH_NAME}"
-def branch_deployment_environment = get_branch_deployment_environment branch_type
+def branch_type = utilities.get_branch_type "${env.BRANCH_NAME}"
+def branch_deployment_environment = utilities.get_branch_deployment_environment branch_type
 
 if (branch_deployment_environment) {
     stage('deploy') {
@@ -40,51 +43,6 @@ if (branch_deployment_environment) {
             //TODO specify the deployment
         }
     }
-}
-
-// Utility functions
-def get_branch_type(String branch_name) {
-    //Must be specified according to <flowInitContext> configuration of jgitflow-maven-plugin in pom.xml
-    def dev_pattern = ".*dev"
-    def release_pattern = ".*release/.*"
-    def feature_pattern = ".*feature/.*"
-    def hotfix_pattern = ".*hotfix/.*"
-    def master_pattern = ".*master"
-    if (branch_name =~ dev_pattern) {
-        return "dev"
-    } else if (branch_name =~ release_pattern) {
-        return "release"
-    } else if (branch_name =~ master_pattern) {
-        return "master"
-    } else if (branch_name =~ feature_pattern) {
-        return "feature"
-    } else if (branch_name =~ hotfix_pattern) {
-        return "hotfix"
-    } else {
-        return null;
-    }
-}
-
-def get_branch_deployment_environment(String branch_type) {
-    if (branch_type == "dev") {
-        return "dev"
-    } else if (branch_type == "release") {
-        return "staging"
-    } else if (branch_type == "master") {
-        return "prod"
-    } else {
-        return null;
-    }
-}
-
-def mvn(String goals) {
-    def mvnHome = tool "mvn"
-
-    if (isUnix()) {
-         sh "'${mvnHome}/bin/mvn' -B ${goals}"
-	  } else {
-	     bat(/"${mvnHome}\bin\mvn" -B ${goals}/)
-	  }
 }
 
 def version() {
