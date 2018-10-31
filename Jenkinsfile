@@ -35,27 +35,31 @@ stage('Checkout') {
 	}
         utilities.log "BRANCH_NAME" , "${BRANCH_NAME}"    
         v = version()
-        currentBuild.displayName = "${BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"        
+        currentBuild.displayName = "${BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"    
+	stash exclude: 'target/', include: '**', name: 'source'    
     }
 }
 
 stage('Unit Test') {
-    node {
-	utilities.mvn "clean verify"    
+    node {  
+	unstash 'source'        
+        try {
+            utilities.mvn "clean test -Dmaven.test.failure.ignore=true"
+        } finally {
+            junit 'target/surefire-reports/**/*.xml'
+        }
     }
 }
 
-stage('build') {
+stage('Build') {
     node {
-        utilities.mvn "clean package -DskipTests"
-    }
-}
-
-stage('Create build output'){
-    node {	    
-	    // Archive the build output artifacts.
+        unstash 'source'        
+        try {
+	    utilities.mvn "clean package -DskipTests"
+	} finally {
+            // Archive the build output artifacts.
 	    archiveArtifacts artifacts: 'target/*.war' , fingerprint: true
-	    // junit '**/target/surefire-reports/TEST-*.xml'
+        }
     }
 }
 
