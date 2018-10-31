@@ -2,6 +2,14 @@
 
 properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 def utilities
+def appname = "sb-web"
+def downstreamJob="../sb-update-manifest"
+if(!env.BRANCH_NAME){
+    BRANCH_NAME=""
+} else {
+    BRANCH_NAME="/${env.BRANCH_NAME}"
+}
+log("setup", "BRANCH_NAME=$BRANCH_NAME")
 
 stage('Checkout and Unit Test') {
     node {
@@ -26,6 +34,10 @@ stage('Create build output'){
 	    archiveArtifacts artifacts: 'target/*.war' , fingerprint: true
 	    // junit '**/target/surefire-reports/TEST-*.xml'
     }
+}
+
+stage('Trigger Release Build') {
+       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: version]], wait: false
 }
 
 def branch_type = utilities.get_branch_type "${env.BRANCH_NAME}"
