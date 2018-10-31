@@ -11,13 +11,14 @@ if(!env.BRANCH_NAME){
 }
 
 echo "BRANCH_NAME=$BRANCH_NAME"
+def v = 0
 
 stage('Checkout and Unit Test') {
     node {
     	git 'https://github.com/mmneri/sb-deploy.git'
       	utilities = load 'utilities.groovy'
         checkout scm
-        def v = version()
+        v = version()
         currentBuild.displayName = "${env.BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"
         utilities.mvn "clean verify"
     }
