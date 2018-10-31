@@ -38,7 +38,7 @@ stage('Create build output'){
 }
 
 stage('Trigger Release Build') {
-       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: version]], wait: false
+       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: v]], wait: false
 }
 
 def branch_type = utilities.get_branch_type "${env.BRANCH_NAME}"
