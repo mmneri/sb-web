@@ -27,8 +27,7 @@ stage('Checkout') {
 	if(BRANCH_NAME == ""){
 	    branchName = utilities.getBranchName()
 	    if(!branchName){
-		gitBranch = "${scmVars.GIT_BRANCH}"
-		gitBranch = gitBranch.replace("origin/", "")        
+		gitBranch = "${scmVars.GIT_BRANCH}"       
 	    	BRANCH_NAME = "${gitBranch}"
 	    } else {
 		BRANCH_NAME = "${branchName}" 
@@ -67,4 +66,9 @@ stage('Trigger Release Build') {
 def version() {
     def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
     return matcher ? matcher[0][1] : null
+}
+
+def versionInParts() {
+    def matcher = readFile('pom.xml') =~ '<version>(\\d*)\\.(\\d*)\\.(\\d*)(-SNAPSHOT)*</version>'
+    matcher ? matcher[0] : null
 }
