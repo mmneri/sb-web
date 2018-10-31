@@ -9,7 +9,8 @@ if(!env.BRANCH_NAME){
 } else {
     BRANCH_NAME="/${env.BRANCH_NAME}"
 }
-log("setup", "BRANCH_NAME=$BRANCH_NAME")
+
+echo "BRANCH_NAME=$BRANCH_NAME"
 
 stage('Checkout and Unit Test') {
     node {
