@@ -1,6 +1,6 @@
 #!groovy​
-
-properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
+// BuildDiscarderProperty since Jenkins core 2.147 API
+// properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 
 def utilities
 def appname = "sb-web"
