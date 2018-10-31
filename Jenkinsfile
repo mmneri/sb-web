@@ -5,23 +5,44 @@ properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', 
 def utilities
 def appname = "sb-web"
 def downstreamJob = "sb-update-manifest"
-if(!env.BRANCH_NAME){
-    BRANCH_NAME=""
-} else {
-    BRANCH_NAME="/${env.BRANCH_NAME}"
+def v = 0
+def BRANCH_NAME = ""
+if(env.BRANCH_NAME){
+    BRANCH_NAME = "${env.BRANCH_NAME}"
 }
 
-echo "BRANCH_NAME=$BRANCH_NAME"
-def v = 0
-
-stage('Checkout and Unit Test') {
+stage('Checkout') {
     node {
     	git 'https://github.com/mmneri/sb-deploy.git'
-      	utilities = load 'utilities.groovy'
-        checkout scm
+      	utilities = load 'utilities.groovy'  
+        scmVars = checkout scm
+        // scmVars contains the following values
+        // GIT_BRANCH=origin/mybranch
+        // GIT_COMMIT=fc8279a107ebaf806f2e310fce15a7a54238eb71
+        // GIT_PREVIOUS_COMMIT=6f2e319a1fc82707ebaf800fce15a7a54238eb71
+        // GIT_PREVIOUS_SUCCESSFUL_COMMIT=310fce159a1fc82707ebaf806f2ea7a54238eb71
+        // GIT_URL= 	
+	
+	// si env.BRANCH_NAME return null    
+	if(BRANCH_NAME == ""){
+	    branchName = utilities.getBranchName()
+	    if(!branchName){
+		gitBranch = "${scmVars.GIT_BRANCH}"
+		BRANCH_NAME = gitBranch.replace("origin/", "")        
+	    	BRANCH_NAME = "${gitBranch}"
+	    } else {
+		BRANCH_NAME = "${branchName}" 
+	    }
+	}
+        utilities.log "BRANCH_NAME" , "${BRANCH_NAME}"    
         v = version()
-        currentBuild.displayName = "${env.BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"
-        utilities.mvn "clean verify"
+        currentBuild.displayName = "${branchName}-${v}-${env.BUILD_NUMBER}"        
+    }
+}
+
+stage('Unit Test') {
+    node {
+	utilities.mvn "clean verify"    
     }
 }
 
@@ -40,24 +61,7 @@ stage('Create build output'){
 }
 
 stage('Trigger Release Build') {
-       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: v]], wait: false
-}
-
-def branch_type = utilities.get_branch_type "${env.BRANCH_NAME}"
-def branch_deployment_environment = utilities.get_branch_deployment_environment branch_type
-
-if (branch_deployment_environment) {
-    stage('deploy') {
-        if (branch_deployment_environment == "prod") {
-            timeout(time: 1, unit: 'DAYS') {
-                input "Deploy to ${branch_deployment_environment} ?"
-            }
-        }
-        node {
-            echo "Deploying to ${branch_deployment_environment}"
-            //TODO specify the deployment
-        }
-    }
+       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}/${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: v]], wait: false
 }
 
 def version() {
