@@ -6,6 +6,9 @@ def utilities
 def appname = "sb-web"
 def downstreamJob = "sb-update-manifest"
 def v = 0
+def BUILD_URL = ""
+def GIT_COMMIT = ""
+def BRANCH_TYPE = ""
 def BRANCH_NAME = ""
 if(env.BRANCH_NAME){
     BRANCH_NAME = "${env.BRANCH_NAME}"
@@ -25,13 +28,15 @@ stage('Checkout') {
 	
 		// si env.BRANCH_NAME return null    
 		if(BRANCH_NAME == ""){
-			gitBranch = "${scmVars.GIT_BRANCH}"
-			gitBranch = gitBranch.replace("origin/","")       
+			gitBranch = "${scmVars.GIT_BRANCH}"      
 			BRANCH_NAME = "${gitBranch}"
 		}
-        utilities.log "BRANCH_NAME" , "${BRANCH_NAME}"    
+        utilities.log "BRANCH_NAME" , "${BRANCH_NAME}"  
+        BRANCH_TYPE = utilities.getBranchType("${BRANCH_NAME}") 
+        BUILD_URL = "${scmVars.GIT_URL}"
+		GIT_COMMIT = "${scmVars.GIT_COMMIT}"  
         v = version()
-        currentBuild.displayName = "${BRANCH_NAME}-${v}-${env.BUILD_NUMBER}"    
+        currentBuild.displayName = "${BRANCH_TYPE}-${v}-${env.BUILD_NUMBER}"    
 		stash exclude: 'target/', include: '**', name: 'source'    
     }
 }
@@ -51,7 +56,7 @@ stage('Build') {
     node {
         unstash 'source'        
         try {
-		    utilities.mvn "clean package -DskipTests"
+		    utilities.mvn "clean package -DskipTests -DBUILD_NUMBER=${env.BUILD_NUMBER} -DBUILD_URL=${BUILD_URL} -DGIT_COMMIT=${GIT_COMMIT}"
 		} finally {
             // Archive the build output artifacts.
 			archiveArtifacts artifacts: 'target/*.war' , fingerprint: true
@@ -59,8 +64,10 @@ stage('Build') {
     }
 }
 
-stage('Trigger Release Build') {
-       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}/${BRANCH_NAME}"], [$class: 'StringParameterValue', name: 'revision', value: v]], wait: false
+if(BRANCH_TYPE == "dev") {
+	stage('Trigger Release Build') {
+	       build job: downstreamJob, parameters: [[$class: 'StringParameterValue', name: "app", value: "${appname}/${BRANCH_TYPE}"], [$class: 'StringParameterValue', name: 'revision', value: v]], wait: false
+	}
 }
 
 def version() {
