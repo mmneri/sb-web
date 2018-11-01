@@ -28,15 +28,21 @@ stage('Checkout') {
 	
 		// si env.BRANCH_NAME return null    
 		if(BRANCH_NAME == ""){
-			gitBranch = "${scmVars.GIT_BRANCH}"      
+			gitBranch = "${scmVars.GIT_BRANCH}"
+			gitBranch = gitBranch.replace("origin/","")        
 			BRANCH_NAME = "${gitBranch}"
 		}
         utilities.log "BRANCH_NAME" , "${BRANCH_NAME}"  
-        BRANCH_TYPE = utilities.getBranchType("${BRANCH_NAME}") 
+        BRANCH_TYPE = utilities.getBranchType("${BRANCH_NAME}")
         BUILD_URL = "${scmVars.GIT_URL}"
-		GIT_COMMIT = "${scmVars.GIT_COMMIT}"  
-        v = version()
-        currentBuild.displayName = "${BRANCH_TYPE}-${v}-${env.BUILD_NUMBER}"    
+		GIT_COMMIT = "${scmVars.GIT_COMMIT}"    
+        versions = majorVersion()
+        major = versions[1]
+        minor = versions[2]
+        patch = versions[3]
+        v = "${major}.${minor}.${patch}"
+        currentBuild.displayName = "${BRANCH_TYPE}-${v}-${env.BUILD_NUMBER}" 
+        echo "WORKSPACE = ${env.WORKSPACE}" 
 		stash exclude: 'target/', include: '**', name: 'source'    
     }
 }
@@ -75,7 +81,7 @@ def version() {
     return matcher ? matcher[0][1] : null
 }
 
-def versionInParts() {
-    def matcher = readFile('pom.xml') =~ '<version>(\\d*)\\.(\\d*)\\.(\\d*)(-SNAPSHOT)*</version>'
+def majorVersion() {
+    def matcher = readFile('pom.xml') =~ '<version>(\\d*)\\.(\\d*)\\.(\\d*)(-.*)*</version>'
     matcher ? matcher[0] : null
 }
