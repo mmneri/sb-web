@@ -1,18 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>webapp</groupId>
-  <artifactId>sb-web</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>war</packaging>
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>webapp</groupId>
+	<artifactId>sb-web</artifactId>
+	<version>0.0.1-${BUILD_NUMBER}</version>
+	<packaging>${PACKAGING}</packaging>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>        
+		<BUILD_NUMBER>SNAPSHOT</BUILD_NUMBER>
+		<BUILD_URL>Not built with Jenkins</BUILD_URL>
+		<GIT_COMMIT>Not supplied</GIT_COMMIT>
+		<PACKAGING>war</PACKAGING>
+		<FINAL_NAME>fff-web</FINAL_NAME>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>      
         <jgitflow.maven.plugin.version>1.0-m4.3</jgitflow.maven.plugin.version>
 	</properties>
-
-	<parent>
+  
+ 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.8.RELEASE</version>
@@ -20,7 +25,7 @@
 	</parent>
 	
 	<build>
-        <finalName>fff-web</finalName>
+        <finalName>${FINAL_NAME}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -38,7 +43,7 @@
                     <noDeploy>true</noDeploy>
                     <flowInitContext>
                         <masterBranchName>master</masterBranchName>
-                        <developBranchName>development</developBranchName>
+                        <developBranchName>dev</developBranchName>
                         <featureBranchPrefix>feature/</featureBranchPrefix>
                         <releaseBranchPrefix>release/</releaseBranchPrefix>
                         <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
