@@ -1,6 +1,7 @@
 #!groovy​
 // BuildDiscarderProperty since Jenkins core 2.147 API
 // properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
+properties([[$class: 'CopyArtifactPermissionProperty', projectNames: 'sb-deploy']])
 
 def utilities
 def appname = "sb-web"
